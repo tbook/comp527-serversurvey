@@ -7,5 +7,9 @@ from scrapy.item import Item, Field
 
 class ServersurveyItem(Item):
     # define the fields for your item here like:
-    # name = Field()
-    pass
+    version = Field()
+    contentType = Field()
+    date = Field()
+    url = Field()
+    
+    header = Field()

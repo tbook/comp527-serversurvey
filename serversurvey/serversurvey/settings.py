@@ -9,6 +9,8 @@
 BOT_NAME = 'serversurvey'
 BOT_VERSION = '1.0'
 
+ITEM_PIPELINES = ['serversurvey.pipelines.ServersurveyPipeline']
+
 SPIDER_MODULES = ['serversurvey.spiders']
 NEWSPIDER_MODULE = 'serversurvey.spiders'
 DEFAULT_ITEM_CLASS = 'serversurvey.items.ServersurveyItem'
