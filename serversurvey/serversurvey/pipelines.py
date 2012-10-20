@@ -12,6 +12,7 @@ class ServersurveyPipeline(object):
 
     def __init__(self):
         self.files = {}
+        #TODO: Need to close file.  Should be moved to spider_opened
         self.csvwriter = csv.writer(open('%s_data.csv' % 'survey', 'wb'))
 
     #@classmethod
@@ -40,7 +41,6 @@ class ServersurveyPipeline(object):
 
 
     def process_item(self, item, spider):
-        print '$$$$$$ We processed an item!!! $$$$$$$$$'
         #self.exporter.export()
 
         row = []
