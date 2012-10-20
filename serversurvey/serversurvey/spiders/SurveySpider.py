@@ -10,8 +10,8 @@ class SurveySpider(BaseSpider):
     Reads in a list of URLS and retrieves server software versions.
     """
     name = 'surveyspider'
-    allowed_domains = ['rice.edu', 'gatech.edu']
-    start_urls = ['http://www.rice.edu/', 'http://gatech.edu']
+    allowed_domains = []
+    start_urls = []
 
     def __init__(self):
         BaseSpider.__init__(self)
@@ -40,13 +40,8 @@ class SurveySpider(BaseSpider):
         """
         Parses stuff
         """
-        # we want to grab the server versions from responses
-        print response.url
-        print response.headers
-        print response.headers.get('Server'), response.headers.get('Content-Type')
         
-        # may want to compare server daye to our own here and save it in items
-        
+        #Save header data
         item = ServersurveyItem()
         item['url'] = response.url
         item['version'] = response.headers.get('Server')
