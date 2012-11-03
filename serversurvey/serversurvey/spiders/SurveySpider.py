@@ -46,11 +46,15 @@ class SurveySpider(BaseSpider):
         requests.append(Request(url, method='GET'))
         
         #Create a head
+        requests.append(Request(url, method='HEAD'))
         
         #Create a options
+        requests.append(Request(url, method='OPTIONS'))
         
         #Create a trace
+        requests.append(Request(url, method='OPTIONS'))
         
+        return requests
 
     def parse(self, response):
         """
