@@ -17,3 +17,5 @@ class ServersurveyItem(Item):
     
     requestMethod = Field()
     requestHeaders= Field()
+    
+    contentLength = Field()

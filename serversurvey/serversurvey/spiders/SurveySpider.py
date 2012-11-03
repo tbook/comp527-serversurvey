@@ -43,28 +43,28 @@ class SurveySpider(BaseSpider):
         
         print 'Creating requests for ' + url
         
-        #Create a get
+        #Create a get request
         requests.append(Request(url, method='GET'))
         
-        #Create a partial get
+        #Create a partial get request
         requests.append(Request(url, method='GET', headers={'bytes': '0-50'}))
         
-        #Create a conditional get
+        #Create a conditional get request
         requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}))
         
-        #Create a head
+        #Create a head request
         requests.append(Request(url, method='HEAD'))
         
-        #Create a options
+        #Create a options request
         requests.append(Request(url, method='OPTIONS'))
         
-        #Create a trace
+        #Create a trace request
         requests.append(Request(url, method='TRACE'))
        
-        #Request index.html as a stylesheet
+        #Request index.html as a stylesheet request
         requests.append(Request(url, method='GET', headers={'Accept': 'text/css'}))
         
-        #Request robots.txt as a stylesheet
+        #Request robots.txt as a stylesheet request
         requests.append(Request(url + "/robots.txt", method='GET', headers={'Accept': 'text/css'}))
         
         return requests
@@ -84,6 +84,10 @@ class SurveySpider(BaseSpider):
         
         item['requestMethod'] = response.request.method
         item['requestHeaders'] = response.request.headers
+        
+        item['contentLength'] = response.headers.get('Content-Length')
+        
+        #response.body
         
         # things to do: - figure how to store and analyze data from crawler
         #               - figure our a way to ask for features on the server
