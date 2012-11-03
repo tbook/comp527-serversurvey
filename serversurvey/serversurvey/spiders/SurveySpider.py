@@ -52,7 +52,7 @@ class SurveySpider(BaseSpider):
         requests.append(Request(url, method='OPTIONS'))
         
         #Create a trace
-        requests.append(Request(url, method='OPTIONS'))
+        requests.append(Request(url, method='TRACE'))
         
         return requests
 
