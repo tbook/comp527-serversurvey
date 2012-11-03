@@ -60,10 +60,10 @@ class ServersurveyPipeline(object):
         else:
             row.append( item['requestMethod'] )
             
-        if item['requestHeader'] == None: 
+        if item['requestHeaders'] == None: 
             row.append( '' )
         else:
-            row.append( item['requestHeader'] )
+            row.append( item['requestHeaders'] )
 
         if item['version'] == None: 
             row.append( '' )

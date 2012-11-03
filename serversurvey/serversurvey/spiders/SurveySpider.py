@@ -50,7 +50,7 @@ class SurveySpider(BaseSpider):
         requests.append(Request(url, method='GET', headers={'bytes': '0-50'}))
         
         #Create a conditional get
-        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}))
+        requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}))
         
         #Create a head
         requests.append(Request(url, method='HEAD'))
