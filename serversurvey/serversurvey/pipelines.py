@@ -79,11 +79,17 @@ class ServersurveyPipeline(object):
             row.append( '' )
         else:
             row.append( item['contentLength'] )
+            
+        if item['actualBodyLength'] == None: 
+            row.append( '' )
+        else:
+            row.append( item['actualBodyLength'] )
 
         if item['header'] == None: 
             row.append( '' )
         else:
             row.append( item['header'] )
+
 
 
 

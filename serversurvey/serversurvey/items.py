@@ -19,3 +19,4 @@ class ServersurveyItem(Item):
     requestHeaders= Field()
     
     contentLength = Field()
+    actualBodyLength = Field()
