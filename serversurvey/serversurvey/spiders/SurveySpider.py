@@ -17,7 +17,7 @@ class SurveySpider(BaseSpider):
         BaseSpider.__init__(self)
         
         print 'Opening Alexa URL CSV, please wait.'
-        maxSites = 5
+        maxSites = 10
         
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
@@ -60,6 +60,12 @@ class SurveySpider(BaseSpider):
         
         #Create a trace
         requests.append(Request(url, method='TRACE'))
+       
+        #Request index.html as a stylesheet
+        requests.append(Request(url, method='GET', headers={'Accept': 'text/css'}))
+        
+        #Request robots.txt as a stylesheet
+        requests.append(Request(url + "/robots.txt", method='GET', headers={'Accept': 'text/css'}))
         
         return requests
 
