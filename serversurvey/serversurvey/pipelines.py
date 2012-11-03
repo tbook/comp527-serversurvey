@@ -59,10 +59,10 @@ class ServersurveyPipeline(object):
 
         for columnName in headerRow:
             # pick out the thing in the dictionary 
-            if item[ headerRow[columnName] ] == None: 
+            if item[ columnName ] == None: 
                 row.append( '' )
             else:
-                row.append( item[ headerRow[columnName] ] )
+                row.append( item[ columnName ] )
 
         self.csvwriter.writerow(headerRow)
         self.csvwriter.writerow(row)

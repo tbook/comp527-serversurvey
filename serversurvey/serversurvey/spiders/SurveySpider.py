@@ -69,6 +69,12 @@ class SurveySpider(BaseSpider):
         #Request robots.txt as a stylesheet request
         requests.append(Request(url + "/robots.txt", method='GET', meta={'REQUEST_TYPE':'GET_TXT_AS_CSS'}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
+        #Request a relative URL
+        requests.append(Request(url + "/../", method='GET', meta={'REQUEST_TYPE':'GET_RELATIVE_URL'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        
+        #Request the Favicon
+        requests.append(Request(url + "/favicon.ico", method='GET', meta={'REQUEST_TYPE':'GET_FAVICON'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        
         return requests
 
     def parse(self, response):
