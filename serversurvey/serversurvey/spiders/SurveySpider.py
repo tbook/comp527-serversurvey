@@ -1,4 +1,4 @@
-import csv
+import csv, sys
 
 from scrapy.spider import BaseSpider
 from scrapy.http import Request
@@ -46,28 +46,28 @@ class SurveySpider(BaseSpider):
         print 'Creating requests for ' + url
         
         #Create a get request
-        requests.append(Request(url, method='GET', dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a partial get request
-        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}, meta={'REQUEST_TYPE':'PARTIAL_GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a conditional get request
-        requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}, meta={'REQUEST_TYPE':'CONDITIONAL_GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a head request
-        requests.append(Request(url, method='HEAD', dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='HEAD', meta={'REQUEST_TYPE':'HEAD'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a options request
-        requests.append(Request(url, method='OPTIONS', dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='OPTIONS', meta={'REQUEST_TYPE':'OPTIONS'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a trace request
-        requests.append(Request(url, method='TRACE', dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='TRACE', meta={'REQUEST_TYPE':'TRACE'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
        
         #Request index.html as a stylesheet request
-        requests.append(Request(url, method='GET', headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET_HTML_AS_CSS'}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Request robots.txt as a stylesheet request
-        requests.append(Request(url + "/robots.txt", method='GET', headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url + "/robots.txt", method='GET', meta={'REQUEST_TYPE':'GET_TXT_AS_CSS'}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         return requests
 
@@ -78,7 +78,8 @@ class SurveySpider(BaseSpider):
         
         #Save header data
         item = ServersurveyItem()
-        item['url'] = response.url
+        item['responseUrl'] = response.url
+        item['requestUrl'] = response.request.url
         item['version'] = response.headers.get('Server')
         item['contentType'] = response.headers.get('Content-Type')
         item['header'] = response.headers.__str__()
@@ -89,7 +90,9 @@ class SurveySpider(BaseSpider):
         
         item['contentLength'] = response.headers.get('Content-Length')
         
-        item['actualBodyLength'] = len(response.body)
+        item['actualBodyLength'] = sys.getsizeof(response.body)
+        
+        item['requestType'] = response.request.meta.get('REQUEST_TYPE')
         
         # things to do: - figure how to store and analyze data from crawler
         #               - figure our a way to ask for features on the server
@@ -101,5 +104,5 @@ class SurveySpider(BaseSpider):
         """
         Parses the TwistedFailure failure and hands it along to parse TODO: just print error to screen for now
         """
-        print 'HELLO!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n\n\n\n\n\n'
+        print 'Parse Failure:'
         print failure.getErrorMessage()

@@ -10,7 +10,8 @@ class ServersurveyItem(Item):
     version = Field()
     contentType = Field()
     date = Field()
-    url = Field()
+    requestUrl = Field()
+    responseUrl = Field()
     
     header = Field()
     status = Field()
@@ -20,3 +21,5 @@ class ServersurveyItem(Item):
     
     contentLength = Field()
     actualBodyLength = Field()
+    
+    requestType = Field()

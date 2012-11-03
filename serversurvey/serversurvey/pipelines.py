@@ -45,15 +45,26 @@ class ServersurveyPipeline(object):
 
         row = []
 
-        if item['url'] == None: 
+        if item['requestUrl'] == None: 
             row.append( '' )
         else:
-            row.append( item['url'] )
+            row.append( item['requestUrl'] )
+
+        if item['responseUrl'] == None: 
+            row.append( '' )
+        else:
+            row.append( item['responseUrl'] )
+
             
         if item['status'] == None: 
             row.append( '' )
         else:
             row.append( item['status'] )
+            
+        if item['requestType'] == None: 
+            row.append( '' )
+        else:
+            row.append( item['requestType'] )
             
         if item['requestMethod'] == None: 
             row.append( '' )
