@@ -52,7 +52,8 @@ class ServersurveyPipeline(object):
                      'contentType',
                      'contentLength',
                      'actualBodyLength',
-                     'header'
+                     'header',
+                     'requestHeaders'
                      ]
         row = []
 
@@ -62,7 +63,8 @@ class ServersurveyPipeline(object):
                 row.append( '' )
             else:
                 row.append( item[ headerRow[columnName] ] )
-        
+
+        self.csvwriter.writerow(headerRow)
         self.csvwriter.writerow(row)
         
         return item
