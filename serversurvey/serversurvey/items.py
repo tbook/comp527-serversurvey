@@ -14,3 +14,6 @@ class ServersurveyItem(Item):
     
     header = Field()
     status = Field()
+    
+    requestMethod = Field()
+    requestHeaders= Field()

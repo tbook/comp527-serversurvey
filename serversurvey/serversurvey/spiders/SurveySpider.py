@@ -41,9 +41,16 @@ class SurveySpider(BaseSpider):
         """
         requests = []
         
+        print 'Creating requests for ' + url
+        
         #Create a get
-        print 'Creating request for ' + url
         requests.append(Request(url, method='GET'))
+        
+        #Create a partial get
+        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}))
+        
+        #Create a conditional get
+        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}))
         
         #Create a head
         requests.append(Request(url, method='HEAD'))
@@ -67,6 +74,10 @@ class SurveySpider(BaseSpider):
         item['version'] = response.headers.get('Server')
         item['contentType'] = response.headers.get('Content-Type')
         item['header'] = response.headers.__str__()
+        item['status'] = response.status
+        
+        item['requestMethod'] = response.request.method
+        item['requestHeaders'] = response.request.headers
         
         # things to do: - figure how to store and analyze data from crawler
         #               - figure our a way to ask for features on the server
