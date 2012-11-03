@@ -1,7 +1,7 @@
 import csv
 
 from scrapy.spider import BaseSpider
-
+from scrapy.http import Request
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from serversurvey.items import ServersurveyItem
 
@@ -17,7 +17,7 @@ class SurveySpider(BaseSpider):
         BaseSpider.__init__(self)
         
         print 'Opening Alexa URL CSV, please wait.'
-        maxSites = 500
+        maxSites = 5
         
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
@@ -35,6 +35,22 @@ class SurveySpider(BaseSpider):
         csv_file.close()
         print 'Done opening URLs, starting crawler....'
 
+    def make_requests_from_url(self, url):
+        """
+        Prepares the requests for the spider
+        """
+        requests = []
+        
+        #Create a get
+        print 'Creating request for ' + url
+        requests.append(Request(url, method='GET'))
+        
+        #Create a head
+        
+        #Create a options
+        
+        #Create a trace
+        
 
     def parse(self, response):
         """
