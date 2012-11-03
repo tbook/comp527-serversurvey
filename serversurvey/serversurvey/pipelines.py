@@ -14,6 +14,7 @@ class ServersurveyPipeline(object):
         self.files = {}
         #TODO: Need to close file.  Should be moved to spider_opened
         self.csvwriter = csv.writer(open('%s_data.csv' % 'survey', 'wb'))
+        self.headerWritten = False
 
     #@classmethod
     """
@@ -55,8 +56,12 @@ class ServersurveyPipeline(object):
                      'header',
                      'requestHeaders'
                      ]
-        row = []
 
+        if not self.headerWritten:
+            self.headerWritten = True
+            self.csvwriter.writerow(headerRow)            
+
+        row = []
         for columnName in headerRow:
             # pick out the thing in the dictionary 
             if item[ columnName ] == None: 
@@ -64,7 +69,6 @@ class ServersurveyPipeline(object):
             else:
                 row.append( item[ columnName ] )
 
-        self.csvwriter.writerow(headerRow)
         self.csvwriter.writerow(row)
         
         return item
