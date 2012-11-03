@@ -50,6 +50,11 @@ class ServersurveyPipeline(object):
         else:
             row.append( item['url'] )
             
+        if item['status'] == None: 
+            row.append( '' )
+        else:
+            row.append( item['status'] )
+
         if item['version'] == None: 
             row.append( '' )
         else:
@@ -64,6 +69,8 @@ class ServersurveyPipeline(object):
             row.append( '' )
         else:
             row.append( item['header'] )
+
+
 
         
         self.csvwriter.writerow(row)
