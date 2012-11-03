@@ -13,3 +13,4 @@ class ServersurveyItem(Item):
     url = Field()
     
     header = Field()
+    status = Field()
