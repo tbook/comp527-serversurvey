@@ -19,7 +19,7 @@ class SurveySpider(BaseSpider):
         self.handle_httpstatus_list = range(0,1000)
         
         print 'Opening Alexa URL CSV, please wait.'
-        maxSites = 10
+        maxSites = 500
         
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
