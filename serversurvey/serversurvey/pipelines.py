@@ -43,67 +43,25 @@ class ServersurveyPipeline(object):
     def process_item(self, item, spider):
         #self.exporter.export()
 
+        headerRow = ['requestUrl',
+                     'responseUrl', 
+                     'status',
+                     'requestType',
+                     'requestMethod',
+                     'version',
+                     'contentType',
+                     'contentLength',
+                     'actualBodyLength',
+                     'header'
+                     ]
         row = []
 
-        if item['requestUrl'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['requestUrl'] )
-
-        if item['responseUrl'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['responseUrl'] )
-
-            
-        if item['status'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['status'] )
-            
-        if item['requestType'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['requestType'] )
-            
-        if item['requestMethod'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['requestMethod'] )
-            
-        if item['requestHeaders'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['requestHeaders'] )
-
-        if item['version'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['version'] )
-
-        if item['contentType'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['contentType'] )
-            
-        if item['contentLength'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['contentLength'] )
-            
-        if item['actualBodyLength'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['actualBodyLength'] )
-
-        if item['header'] == None: 
-            row.append( '' )
-        else:
-            row.append( item['header'] )
-
-
-
-
+        for columnName in headerRow:
+            # pick out the thing in the dictionary 
+            if item[ headerRow[columnName] ] == None: 
+                row.append( '' )
+            else:
+                row.append( item[ headerRow[columnName] ] )
         
         self.csvwriter.writerow(row)
         
