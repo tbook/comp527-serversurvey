@@ -46,34 +46,34 @@ class SurveySpider(BaseSpider):
         print 'Creating requests for ' + url
         
         #Create a get request
-        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a partial get request
-        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}, meta={'REQUEST_TYPE':'PARTIAL_GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', headers={'bytes': '0-50'}, meta={'REQUEST_TYPE':'PARTIAL_GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a conditional get request
-        requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}, meta={'REQUEST_TYPE':'CONDITIONAL_GET'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}, meta={'REQUEST_TYPE':'CONDITIONAL_GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a head request
-        requests.append(Request(url, method='HEAD', meta={'REQUEST_TYPE':'HEAD'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='HEAD', meta={'REQUEST_TYPE':'HEAD', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a options request
-        requests.append(Request(url, method='OPTIONS', meta={'REQUEST_TYPE':'OPTIONS'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='OPTIONS', meta={'REQUEST_TYPE':'OPTIONS', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Create a trace request
-        requests.append(Request(url, method='TRACE', meta={'REQUEST_TYPE':'TRACE'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='TRACE', meta={'REQUEST_TYPE':'TRACE', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
        
         #Request index.html as a stylesheet request
-        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET_HTML_AS_CSS'}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET_HTML_AS_CSS', 'URL':url}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Request robots.txt as a stylesheet request
-        requests.append(Request(url + "/robots.txt", method='GET', meta={'REQUEST_TYPE':'GET_TXT_AS_CSS'}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url + "/robots.txt", method='GET', meta={'REQUEST_TYPE':'GET_TXT_AS_CSS', 'URL':url}, headers={'Accept': 'text/css'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Request a relative URL
-        requests.append(Request(url + "/../", method='GET', meta={'REQUEST_TYPE':'GET_RELATIVE_URL'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url + "/../", method='GET', meta={'REQUEST_TYPE':'GET_RELATIVE_URL', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         #Request the Favicon
-        requests.append(Request(url + "/favicon.ico", method='GET', meta={'REQUEST_TYPE':'GET_FAVICON'}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+        requests.append(Request(url + "/favicon.ico", method='GET', meta={'REQUEST_TYPE':'GET_FAVICON', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
         return requests
 
@@ -85,7 +85,7 @@ class SurveySpider(BaseSpider):
         #Save header data
         item = ServersurveyItem()
         item['responseUrl'] = response.url
-        item['requestUrl'] = response.request.url
+        item['requestUrl'] = response.request.meta.get('URL')
         item['version'] = response.headers.get('Server')
         item['contentType'] = response.headers.get('Content-Type')
         item['header'] = response.headers.__str__()
