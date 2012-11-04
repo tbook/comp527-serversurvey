@@ -53,8 +53,6 @@ if __name__ == "__main__":
         requestID = row[ h['requestType'] ]
         status = row[ h['status'] ]
 
-        print h['version'] == 5, row[ h['version'] ]
-
         # get versions
         versionInfo = rawVersion.split('/')
         while len(versionInfo) < 2:
@@ -93,10 +91,27 @@ if __name__ == "__main__":
     # woohoo done reading, do things with our data
 
     # first thing: see if the status for the same versions are the same
-    '''
+    
+    writerSVS = csv.writer( open( "server_version_vs_status.csv","w") )
+    #writerSS =  csv.writer( open( "server_vs_status.csv","w") )
 
     for sName in servers.keys():
         for sVersion in servers[sName].keys():
-            for ID in servers[sName][sVersion]:
-                print sName,sVersion,ID,servers[sName][sVersion][ID]
-                '''
+            for ID in servers[sName][sVersion].keys():
+                for status in servers[sName][sVersion][ID].keys():
+
+                # server/version and ID vs status 
+                rowSVS = [sName,
+                       sVersion,
+                       ID,
+                       status,
+                       servers[sName][sVersion][ID][status]
+                       ]
+                writerSVS.writerow(row)
+
+                # server and ID vs status #TODO: need to eat, sorry
+
+                #print sName,sVersion,ID,servers[sName][sVersion][ID]
+
+    
+
