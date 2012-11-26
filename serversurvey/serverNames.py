@@ -59,7 +59,7 @@ def main(argv):
             totalCount = totalCount + 1
             
     #Calculate the probabilities for each server
-    pServerByCode = {}    #Dict of dicts to hold baysean probabilities
+    pCodeByServer = {}    #Dict of dicts to hold baysean probabilities
     
     for server in serverCount.keys():
         thisServerResponseCount = serverResponseCount[server]
@@ -67,11 +67,8 @@ def main(argv):
         for code in responseCount.keys():
             #Calculate probabilities
             pCodeServer = float(thisServerResponseCount.get(code,0)) / float(serverCount[server])
-            pServer = float(serverCount[server]) / float(totalCount)
-            pCode = float(responseCount[code]) / float(totalCount)
-            pServerCode = pCodeServer * pServer / pCode
-            probs[code] = pServerCode
-        pServerByCode[server] = probs;
+            probs[code] = pCodeServer
+        pCodeByServer[server] = probs;
     
     #Interpret the sample data        
     #Read the sample data
@@ -103,11 +100,11 @@ def main(argv):
             probProductServer = 1.0
             probProductNotServer = 1.0
             for response in siteResponseDict[site]:
-                probServer = pServerByCode[server][response]
+                probServer = pCodeByServer[server][response]
                 probProductServer = probProductServer * probServer
                 probProductNotServer = probProductNotServer * (1 - probServer)
-            denominator = (serverProbs[server] * probProductServer + \
-            (1 - serverProbs[server]) * probProductNotServer)
+            denominator = (serverProbs[server] * probProductServer) + \
+            ((1 - serverProbs[server]) * probProductNotServer)
             
             if (denominator == 0):
                 print("Invalid data for server " + server + " on site " + site)
@@ -123,12 +120,14 @@ def main(argv):
     for site in finalProbs.keys():
         likelyServer = "unknown"
         serverProbability = 0.0
+        #row = []
         for server in finalProbs[site].keys():
-            if (siteProbs[server] > serverProbability):
+            if (finalProbs[site][server] > serverProbability):
                 likelyServer = server
-                serverProbability = siteProbs[server]
-            writer.writeRow([site, likelyServer, serverProbability])
-            print(site)
+                serverProbability = finalProbs[site][server]
+            #row.append(finalProbs[site][server])
+        #writer.writerow(row)
+        writer.writerow([site, likelyServer, serverProbability])
 
 if __name__ == "__main__":
     main(sys.argv[1:])
