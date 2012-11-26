@@ -47,17 +47,18 @@ def main(argv):
             siteName = row[headerIndices['requestUrl']]
             
             #Store the results
-            thisServerResponses = serverResponseCounts.get(serverName, {})
-            thisResponseCount = thisServerResponses.get(responseCode, 0)
-            thisResponseCount = thisResponseCount + 1
-            thisServerResponses[responseCode] = thisResponseCount
-            serverResponseCounts[serverName] = thisServerResponses
+            if (serverVersion) :     #Ignore empty server versions
+                thisServerResponses = serverResponseCounts.get(serverName, {})
+                thisResponseCount = thisServerResponses.get(responseCode, 0)
+                thisResponseCount = thisResponseCount + 1
+                thisServerResponses[responseCode] = thisResponseCount
+                serverResponseCounts[serverName] = thisServerResponses
             
-            thisResponseCount = responseCounts.get(responseCode, 0)
-            thisResponseCount = thisResponseCount + 1
-            responseCounts[responseCode] = thisResponseCount
+                thisResponseCount = responseCounts.get(responseCode, 0)
+                thisResponseCount = thisResponseCount + 1
+                responseCounts[responseCode] = thisResponseCount
             
-            siteServers[siteName] = serverName
+                siteServers[siteName] = serverName
     
     #Calculate statistics on the dataset
     for site in siteServers.keys() :
@@ -74,7 +75,8 @@ def main(argv):
     reader.next()   #Dump the headers
     
     #Build a dict with all of the responses for each site    
-    siteResponseDict = {}
+    siteResponseDict = {}   #Dict of lists of all responses for a given site
+    siteReportedServer = {} #Reported server type for a given site
     for row in reader:
         siteName = row[ headerIndices['requestUrl'] ]
         responseCode = str(row[ headerIndices['requestType']]) \
@@ -82,6 +84,15 @@ def main(argv):
         siteResponses = siteResponseDict.get(siteName, [])
         siteResponses.append(responseCode)
         siteResponseDict[siteName] = siteResponses
+        
+        #Split version string
+        rawVersion = row[ headerIndices['version'] ]
+        versionInfo = rawVersion.split('/')
+        while len(versionInfo) < 2:
+            versionInfo.append('')
+        serverName = versionInfo[0]
+        serverVersion = versionInfo[1]
+        siteReportedServer[siteName] = serverName
     
     #Predict the server for each site
     finalProbs = {}     #Dict of dicts - each included dict is probability for a given server type
@@ -95,7 +106,7 @@ def main(argv):
                 pResponseGivenServer = float(serverResponseCounts[server].get(response,0)) /\
                         serverCounts[server]
                 pProductServer = pProductServer * pResponseGivenServer
-                pResponseNotServer = float(responseCounts[response] - serverResponseCounts[server].get(response,0)) / (totalCount - serverCounts[server])
+                pResponseNotServer = float(responseCounts.get(response,0) - serverResponseCounts[server].get(response,0)) / (totalCount - serverCounts.get(server,0))
                 pProductNotServer = pProductNotServer * pResponseNotServer
             pServer = float(serverCounts[server]) / totalCount
             pNotServer = float(totalCount - serverCounts[server]) / totalCount
@@ -111,6 +122,9 @@ def main(argv):
     outfile = args.o[0]
     writer = csv.writer(file(outfile, 'w+'), delimiter='\t')
     
+    #print a header
+    writer.writerow(["Site","Reported Server","Calculated Server","Probability"])
+    
     for site in finalProbs.keys():
         likelyServer = "unknown"
         serverProbability = 0.0
@@ -118,7 +132,7 @@ def main(argv):
             if (finalProbs[site][server] > serverProbability):
                 likelyServer = server
                 serverProbability = finalProbs[site][server]
-        writer.writerow([site, likelyServer, serverProbability])
+        writer.writerow([site, siteReportedServer[site], likelyServer, serverProbability])
 
 if __name__ == "__main__":
     main(sys.argv[1:])
