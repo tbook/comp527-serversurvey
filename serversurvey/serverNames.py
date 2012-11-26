@@ -58,28 +58,32 @@ def main(argv):
             
             totalCount = totalCount + 1
             
-    #Calculate the probabilities for each server
-    pCodeByServer = {}    #Dict of dicts to hold baysean probabilities
-    
+    #Calculate the probabilities for each code on a particular server
+    pCodeByServerDict = {}
     for server in serverCount.keys():
         thisServerResponseCount = serverResponseCount[server]
         probs = {}
         for code in responseCount.keys():
-            #Calculate probabilities
+            #Calculate probabilities for each code
             pCodeServer = float(thisServerResponseCount.get(code,0)) / float(serverCount[server])
+            
+            #pCodeNotServer = float(totalCount - thisServerResponseCount.get(code,0))/ float(totalCount - serverCount[server])
+            
+            #print pCodeServer,pCodeNotServer,(pCodeServer==pCodeNotServer)
+            
             probs[code] = pCodeServer
-        pCodeByServer[server] = probs;
+        pCodeByServerDict[server] = probs;
+
+    #Build a dict with the probability of each server type
+    serverProbs = {}
+    for server in serverCount.keys():
+        serverProbs[server] = float(serverCount[server]) / float(totalCount)
     
     #Interpret the sample data        
     #Read the sample data
     infile = args.i[0]
     reader = csv.reader(file(infile, "r"))
     reader.next()   #Dump the headers
-
-    #Build a dict with the probability of each server type
-    serverProbs = {}
-    for server in serverCount.keys():
-        serverProbs[server] = float(serverCount[server]) / float(totalCount)
 
     #Build a dict with all of the responses for each site    
     siteResponseDict = {}
@@ -100,9 +104,9 @@ def main(argv):
             probProductServer = 1.0
             probProductNotServer = 1.0
             for response in siteResponseDict[site]:
-                probServer = pCodeByServer[server][response]
-                probProductServer = probProductServer * probServer
-                probProductNotServer = probProductNotServer * (1 - probServer)
+                pCodeByServer = pCodeByServerDict[server][response]
+                probProductServer = probProductServer * pCodeByServer
+                probProductNotServer = probProductNotServer * (1 - pCodeByServer)
             denominator = (serverProbs[server] * probProductServer) + \
             ((1 - serverProbs[server]) * probProductNotServer)
             
