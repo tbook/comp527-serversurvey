@@ -59,7 +59,7 @@ def main(argv):
             totalCount = totalCount + 1
             
     #Calculate the probabilities for each server
-    serverProbs = {}    #Dict of dicts to hold baysean probabilities
+    pServerByCode = {}    #Dict of dicts to hold baysean probabilities
     
     for server in serverCount.keys():
         thisServerResponseCount = serverResponseCount[server]
@@ -71,12 +71,13 @@ def main(argv):
             pCode = float(responseCount[code]) / float(totalCount)
             pServerCode = pCodeServer * pServer / pCode
             probs[code] = pServerCode
-        serverProbs[server] = probs;
+        pServerByCode[server] = probs;
     
     #Interpret the sample data        
     #Read the sample data
     infile = args.i[0]
     reader = csv.reader(file(infile, "r"))
+    reader.next()   #Dump the headers
 
     #Build a dict with the probability of each server type
     serverProbs = {}
@@ -88,30 +89,46 @@ def main(argv):
     for row in reader:
         siteName = row[ headerIndices['requestUrl'] ]
         responseCode = str(row[ headerIndices['requestType']]) + str(row[ headerIndices['status']])
-        siteResponses = serverResponseDict.get(siteName, [])
+        siteResponses = siteResponseDict.get(siteName, [])
         siteResponses.append(responseCode)
+        siteResponseDict[siteName] = siteResponses
     
-    #Predict the server for each site    
+    #Predict the server for each site
+    finalProbs = {}     #Dict of dicts - each included dict is probability for a given server type
     
     #Calculate the probability for each server type
-    for site in siteResponseDict.keys:
-        for response in siteResponseDict[site]:
-            for server in serverCount.keys():
-                pServer = 
-
+    for site in siteResponseDict.keys():
+        serverFinalProbs = {}
+        for server in serverCount.keys():
+            probProductServer = 1.0
+            probProductNotServer = 1.0
+            for response in siteResponseDict[site]:
+                probServer = pServerByCode[server][response]
+                probProductServer = probProductServer * probServer
+                probProductNotServer = probProductNotServer * (1 - probServer)
+            denominator = (serverProbs[server] * probProductServer + \
+            (1 - serverProbs[server]) * probProductNotServer)
             
-   
+            if (denominator == 0):
+                print("Invalid data for server " + server + " on site " + site)
+            else:
+                serverProb = serverProbs[server] * probProductServer / denominator            
+                serverFinalProbs[server] = serverProb
+        finalProbs[site] = serverFinalProbs
+            
     #Write the results        
     outfile = args.o[0]
     writer = csv.writer(file(outfile, 'w+'), delimiter='\t')
     
-    #Write the output header
-    outRow = []
-    outRow.append('server')
-    outRow.append('serverCount')
-    for code in responseCount.keys():
-        outRow.append(code)
-    writer.writerow(outRow)
+    for site in finalProbs.keys():
+        likelyServer = "unknown"
+        serverProbability = 0.0
+        for server in finalProbs[site].keys():
+            if (siteProbs[server] > serverProbability):
+                likelyServer = server
+                serverProbability = siteProbs[server]
+            writer.writeRow([site, likelyServer, serverProbability])
+            print(site)
 
 if __name__ == "__main__":
     main(sys.argv[1:])
