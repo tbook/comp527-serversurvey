@@ -1,6 +1,6 @@
 # apache_versions.py
 #
-# Counts Apache version strings, among other things.
+# Counts Apache version strings.
 
 import csv,sys,argparse
 import re
@@ -91,29 +91,14 @@ def main(argv):
 
     parser = argparse.ArgumentParser(description="Count apache version strings and write results to output.")
     parser.add_argument("-i", nargs=1, help="input file")
-    parser.add_argument("-t", nargs=1, help="training file")
     parser.add_argument("-o", nargs=1, help="output file for version counts")
-    parser.add_argument("-O", nargs=1, help="output file for probabilistic")
     args = parser.parse_args()
 
     input = "survey-bottom-10k.csv"
     output = "apache_version_counts.csv"
-    training = input
-    poutput = "apache_version_probabilities.csv"
-    do_probabilistic = False
+
     if args.i != None: input = args.i[0]
     if args.o != None: output = args.o[0]
-    if args.t != None:
-        do_probabilistic = True
-        training = args.t[0]
-    if args.O != None: poutput = args.O[0]
-
-    # if probabilistic, do probabilisitc analysis
-    if do_probabilistic:
-        (versionCounts, responseCounts, versionResponseCounts, totalCount) = train_probabilities(training)
-        guess_apache_versions(input, poutput, versionCounts, responseCounts, versionResponseCounts, totalCount)
-
-        
 
     # Read in versions
     apache_versions = load_version_strings(input)
