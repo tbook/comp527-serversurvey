@@ -7,7 +7,7 @@ import re
 from operator import itemgetter
 
 # globals #
-version_regex = re.compile("\d([.]\d)*")
+version_regex = re.compile("\d+([.]\d+)*")
 
 """
 # probabilistic methods #
