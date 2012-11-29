@@ -37,7 +37,7 @@ def re_get_version(server_string, regex):
         
         # add a .X to every version if we're not using the all regex
         if regex != all_version_regex and len(version)>0:
-            if number_regex.match(version[-1]).group() != None:
+            if number_regex.match(version[-1]) != None:
                 version += ".X"
             if version[-1] == ".": # add an X to decimals
                 version += "X"
@@ -116,7 +116,7 @@ def guess_apache_versions(loadfile,outfile,regex, version_counts, response_count
     header = reader.next()
     for i,name in enumerate(header):
         indices[name] = i
-    print indices
+    #print indices
 
     #Build a dict with all of the responses and versions for each site    
     site_response_dict = {}   #Dict of lists of all responses for a given site
@@ -130,13 +130,16 @@ def guess_apache_versions(loadfile,outfile,regex, version_counts, response_count
         site_response_dict[url] = site_responses
         
         # Get reported version
-        version = re_get_version( row[ indices['version'] ], regex )
-        reported_version[url] = version
+        raw_version = row[indices['version']]
+        if (is_apache(raw_version)) :
+            version = re_get_version(raw_version, regex )
+            #print("Interpreted " + row[indices['version']] + " as " + version)
+            reported_version[url] = version
     
     #Predict the version for each site
     finalProbs = {}     #Dict of dicts - each included dict is probability for a given version
     
-    for site in site_response_dict.keys() :
+    for site in reported_version.keys() :
         versionFinalProbs = {}
         for version in version_counts.keys() :
             #print version,version_counts[version], version_response_counts[version]
@@ -175,8 +178,6 @@ def guess_apache_versions(loadfile,outfile,regex, version_counts, response_count
                 likelyVersion = version
                 versionProbability = finalProbs[site][version]
         writer.writerow([site, reported_version[site], likelyVersion, versionProbability])
-#"""
-
 
 def main(argv):
 
@@ -189,15 +190,19 @@ def main(argv):
     parser.add_argument("-regex", nargs=1, help="regex to guess versions. Valid fields: major, minor, exact")
     args = parser.parse_args()
 
+    #Default values
     input = "survey-bottom-10k.csv"
     output = "apache_version_guesses.csv"
-    training = input
-
     regex = minor_version_regex
 
-    if args.i != None: input = args.i[0]
-    if args.o != None: output = args.o[0]
-    if args.t != None: training = args.t[0]
+    #Values from arguments
+    if args.i != None:
+        input = args.i[0]
+    if args.o != None:
+        output = args.o[0]
+    training = input
+    if args.t != None:
+        training = args.t[0]
 
     if args.regex[0] !=None:
         if args.regex[0] == "minor":
