@@ -117,7 +117,8 @@ def load_dates(filename="apache_release_dates.csv"):
     reader = csv.reader(csvfile)
 
     for row in reader:
-        dates[ row[0] ] = row[1]
+        if len(row) > 1:
+            dates[ row[0] ] = row[1]
 
     return dates
 
