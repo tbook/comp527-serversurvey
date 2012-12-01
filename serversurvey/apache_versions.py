@@ -66,15 +66,6 @@ def get_version(server_string):
             version += version_regex.match(split_string[1]).group()
 
             # tweaks
-            two_digit_check = three_digit_regex.match(split_string[1])
-            while(two_digit_check == None and not "coyote" in version.lower() ):
-                version += ".X"
-                two_digit_check = three_digit_regex.match(version.split('/')[1])
-                if len(version) > 50:
-                    print version
-                    break
-            if version == "Apache/2":
-                version += ".X.X"
             if version == "Apache/2.00":
                 version = "Apache/2.0.X"
             if version == "Apache/2.2.x":
@@ -82,6 +73,15 @@ def get_version(server_string):
                 print "replaced little x",version
             if version == "Apache/2.0.x":
                 version = "Apache/2.0.X"
+            if not "coyote" in version.lower() and "apache" in version.lower() and not 'formilux' in version.lower():
+                if version.split('/')[1].count('.') == 0:
+                    version += ".X.X"
+                if version.split('/')[1].count('.') == 1:
+                    version += ".X"
+
+            if version == "Apache/2":
+                version += ".X.X"
+
 
             # check for weirdness
             stdchk = standard_version_regex.match(split_string[1])
