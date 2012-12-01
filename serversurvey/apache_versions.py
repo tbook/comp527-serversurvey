@@ -8,6 +8,9 @@ from operator import itemgetter
 
 # globals #
 version_regex = re.compile("\d+([.][0-9xX]+)*")
+standard_version_regex = re.compile("\d([.](\d|X)+)?([.](\d|X)+)?")
+#two_digit_regex = re.compile("(\d[.](\d)+)[1]")
+three_digit_regex = re.compile("(\d)+[.](\d|Xx)+([.](\d|Xx)+)+")
 
 # counting methods #
 def is_apache(server_string):
@@ -41,17 +44,81 @@ def get_version(server_string):
     if len(split_string) > 1:
 
         # we want to keep Coyote in the version string
-        if "coyote" in server_string.lower():
+        #if "coyote" in server_string.lower():
+        #    version = "Coyote/"
+        #elif "ibm_http" in server_string.lower():
+        #    version = "IBM_HTTP_Server/"
+        if "apache " in split_string[0].lower():
+            version = "Apache/"
+        elif "apache-advanced" in split_string[0].lower():
+            version = "Apache/"
+        elif "formilux" in split_string[0].lower():
+            version = "Apache/"
+            split_string[1] = ""
+        elif "coyote-node" in split_string[0].lower():
             version = "Coyote/"
-        elif "ibm_http" in server_string.lower():
-            version = "IBM_HTTP_Server/"
+        else:
+            version = split_string[0] + "/"
 
         # only keep 2.2.2. ... type strings
         v = version_regex.match(split_string[1])
         if v != None:
             version += version_regex.match(split_string[1]).group()
 
+            # tweaks
+            two_digit_check = three_digit_regex.match(split_string[1])
+            while(two_digit_check == None and not "coyote" in version.lower() ):
+                version += ".X"
+                two_digit_check = three_digit_regex.match(version.split('/')[1])
+                if len(version) > 50:
+                    print version
+                    break
+            if version == "Apache/2":
+                version += ".X.X"
+            if version == "Apache/2.00":
+                version = "Apache/2.0.X"
+            if version == "Apache/2.2.x":
+                version = "Apache/2.2.X"
+                print "replaced little x",version
+            if version == "Apache/2.0.x":
+                version = "Apache/2.0.X"
+
+            # check for weirdness
+            stdchk = standard_version_regex.match(split_string[1])
+            if (stdchk == None and version != "Apache/2") or version == "Apache/" or len(version) < 7: #stop reporting Apache 2
+                print "Weirdness alert:",server_string,"read as",version
+
+            # if after all that it doesn't match as desired, give up
+            if version == "Apache/":
+                version = "unknown"
+    else:
+        version = "unknown"
+
     return version
+
+def get_date(version_string, date_dictionary):
+    '''
+    When given a suitable Apache version string, returns the str release date.
+    '''
+    return date_dictionary.get(version_string,"n/a")
+
+def load_dates(filename="apache_release_dates.csv"):
+    '''
+    When given a filename of versions and release dates, returns a dictionary
+    with versions as keys and dates as items.
+
+    Assume no header is given, even though it shouldn't matter.
+    '''
+    dates = {}
+
+    csvfile = file(filename, "r")
+    reader = csv.reader(csvfile)
+
+    for row in reader:
+        dates[ row[0] ] = row[1]
+
+    return dates
+
 
 def load_version_strings(filename):
     '''
@@ -100,8 +167,9 @@ def main(argv):
     if args.i != None: input = args.i[0]
     if args.o != None: output = args.o[0]
 
-    # Read in versions
+    # Read in versions and dates
     apache_versions = load_version_strings(input)
+    dates = load_dates()
 
     # Write version count results
     print apache_versions
@@ -113,6 +181,7 @@ def main(argv):
         row = []
         row.append(server)
         row.append(apache_versions[server])
+        row.append( get_date(server,dates) )
         print row
         writer.writerow(row)
 
