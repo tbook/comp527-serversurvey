@@ -56,7 +56,7 @@ def get_version(server_string):
             version = "Apache/"
             split_string[1] = ""
         elif "coyote-node" in split_string[0].lower():
-            version = "Coyote/"
+            version = "Apache-Coyote/"
         else:
             version = split_string[0] + "/"
 
@@ -66,6 +66,8 @@ def get_version(server_string):
             version += version_regex.match(split_string[1]).group()
 
             # tweaks
+            if version == "Apache/2.25":
+                version = "Apache/2.25.X"
             if version == "Apache/2.00":
                 version = "Apache/2.0.X"
             if version == "Apache/2.2.x":
@@ -73,7 +75,7 @@ def get_version(server_string):
                 print "replaced little x",version
             if version == "Apache/2.0.x":
                 version = "Apache/2.0.X"
-            if not "coyote" in version.lower() and "apache" in version.lower() and not 'formilux' in version.lower():
+            if not "coyote" in version.lower() and "apache" in version.lower() and not 'formilux' in version.lower() and not '184' in version.lower():
                 if version.split('/')[1].count('.') == 0:
                     version += ".X.X"
                 if version.split('/')[1].count('.') == 1:
@@ -89,7 +91,7 @@ def get_version(server_string):
                 print "Weirdness alert:",server_string,"read as",version
 
             # if after all that it doesn't match as desired, give up
-            if version == "Apache/":
+            if version.strip() == "Apache/":
                 version = "unknown"
     else:
         version = "unknown"
