@@ -7,12 +7,12 @@
 #
 
 BOT_NAME = 'serversurvey'
-BOT_VERSION = '1.0'
+#BOT_VERSION = '1.0'
 
 ITEM_PIPELINES = ['serversurvey.pipelines.ServersurveyPipeline']
 
 SPIDER_MODULES = ['serversurvey.spiders']
 NEWSPIDER_MODULE = 'serversurvey.spiders'
 DEFAULT_ITEM_CLASS = 'serversurvey.items.ServersurveyItem'
-USER_AGENT = '%s/%s' % (BOT_NAME, BOT_VERSION)
-
+USER_AGENT = 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.93 Safari/537.36'
+LOG_LEVEL = 'INFO'

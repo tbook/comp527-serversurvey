@@ -19,7 +19,7 @@ class SurveySpider(BaseSpider):
         self.handle_httpstatus_list = range(0,1000)
         
         print 'Opening Alexa URL CSV, please wait.'
-        maxSites = 500
+        maxSites = 200000
         
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
@@ -43,7 +43,7 @@ class SurveySpider(BaseSpider):
         """
         requests = []
         
-        print 'Creating requests for ' + url
+        #print 'Creating requests for ' + url
         
         #Create a get request
         requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
@@ -75,6 +75,12 @@ class SurveySpider(BaseSpider):
         #Request the Favicon
         requests.append(Request(url + "/favicon.ico", method='GET', meta={'REQUEST_TYPE':'GET_FAVICON', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
+        #Try a post request with a body
+        requests.append(Request(url, method='POST', body='Name=Jonathan+Doe', meta={'REQUEST_TYPE':'POST-BODY', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+
+        #Try a post request with a body
+        requests.append(Request(url, method='POST', meta={'REQUEST_TYPE':'POST-NOBODY', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+
         return requests
 
     def parse(self, response):
@@ -85,20 +91,20 @@ class SurveySpider(BaseSpider):
         #Save header data
         item = ServersurveyItem()
         item['responseUrl'] = response.url
-        item['requestUrl'] = response.request.meta.get('URL')
-        item['version'] = response.headers.get('Server')
-        item['contentType'] = response.headers.get('Content-Type')
+        item['requestUrl'] = response.request.meta.get('URL',"")
+        item['version'] = response.headers.get('Server',"")
+        item['contentType'] = response.headers.get('Content-Type',"")
         item['header'] = response.headers.__str__()
         item['status'] = response.status
         
         item['requestMethod'] = response.request.method
         item['requestHeaders'] = response.request.headers
         
-        item['contentLength'] = response.headers.get('Content-Length')
+        item['contentLength'] = response.headers.get('Content-Length',"")
         
         item['actualBodyLength'] = sys.getsizeof(response.body)
         
-        item['requestType'] = response.request.meta.get('REQUEST_TYPE')
+        item['requestType'] = response.request.meta.get('REQUEST_TYPE',"")
         
         # things to do: - figure how to store and analyze data from crawler
         #               - figure our a way to ask for features on the server
