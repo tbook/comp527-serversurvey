@@ -53,6 +53,7 @@ class ServersurveyPipeline(object):
                      'contentType',
                      'contentLength',
                      'actualBodyLength',
+                     'bodyMD5',
                      'header',
                      'requestHeaders'
                      ]

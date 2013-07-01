@@ -17,9 +17,11 @@ class ServersurveyItem(Item):
     status = Field()
     
     requestMethod = Field()
-    requestHeaders= Field()
+    requestHeaders = Field()
     
     contentLength = Field()
     actualBodyLength = Field()
+
+    bodyMD5 = Field()
     
     requestType = Field()

@@ -1,4 +1,4 @@
-import csv, sys
+import csv, sys, hashlib, socket
 
 from scrapy.spider import BaseSpider
 from scrapy.http import Request
@@ -17,19 +17,34 @@ class SurveySpider(BaseSpider):
         BaseSpider.__init__(self)
         
         self.handle_httpstatus_list = range(0,1000)
+        self.requestCount = 0
         
         print 'Opening Alexa URL CSV, please wait.'
         maxSites = 200000
+        selectionInterval = 5   #Include every nth site
         
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
         
         urls = []
-        rank=0
+        rank=1
         while(rank < maxSites):
             domain = reader.next()[1]
-            self.allowed_domains.append( domain )
-            urls.append( 'http://www.' + domain ) 
+            if (rank % selectionInterval) == 0 :
+                self.allowed_domains.append( domain )
+                host = 'www.' + domain
+                try:
+                    socket.gethostbyname(host)
+                    urls.append('http://' + host)
+                except socket.error:
+                    host = domain
+                    try:
+                        socket.gethostbyname(host)
+                        urls.append('http://' + host)
+                    except socket.error:
+                        pass
+            if (rank % 1000) == 0 :
+                print "Processed " + str(rank) + " hosts"
             rank += 1
         
         self.start_urls += urls
@@ -43,7 +58,9 @@ class SurveySpider(BaseSpider):
         """
         requests = []
         
-        #print 'Creating requests for ' + url
+        self.requestCount = self.requestCount + 1
+        if (self.requestCount % 20) == 0 :
+            print 'Creating requests for ' + url + ' (line ' + str(self.requestCount) + ')'
         
         #Create a get request
         requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
@@ -54,6 +71,9 @@ class SurveySpider(BaseSpider):
         #Create a conditional get request
         requests.append(Request(url, method='GET', headers={'If-Modified-Since': 'Sun, 27 Oct 2030 01:00:00 GMT'}, meta={'REQUEST_TYPE':'CONDITIONAL_GET', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
+        #Create a get request for a nonexistant resource
+        requests.append(Request(url, method='GET', meta={'REQUEST_TYPE':'GET', 'URL':url + "/ASDFLKJ/adsf/908q34oi/sadf8K.html"}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
+
         #Create a head request
         requests.append(Request(url, method='HEAD', meta={'REQUEST_TYPE':'HEAD', 'URL':url}, dont_filter=True, callback=self.parse, errback=self.parseFailure))
         
@@ -85,10 +105,9 @@ class SurveySpider(BaseSpider):
 
     def parse(self, response):
         """
-        Parses stuff
+        Extracts data from response
         """
         
-        #Save header data
         item = ServersurveyItem()
         item['responseUrl'] = response.url
         item['requestUrl'] = response.request.meta.get('URL',"")
@@ -103,12 +122,9 @@ class SurveySpider(BaseSpider):
         item['contentLength'] = response.headers.get('Content-Length',"")
         
         item['actualBodyLength'] = sys.getsizeof(response.body)
+        item['bodyMD5'] = hashlib.md5(response.body).hexdigest()
         
         item['requestType'] = response.request.meta.get('REQUEST_TYPE',"")
-        
-        # things to do: - figure how to store and analyze data from crawler
-        #               - figure our a way to ask for features on the server
-        #               - figure out a way to test server version via behavior (bugs)
         
         return item
         

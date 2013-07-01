@@ -1,8 +1,6 @@
-# Splits version into tw strings
-# Helper to get CSV into a sqlite db
-# Handles commas inside quotes
-#
-# Syntax: csv2tsv infile.csv outfile.tsv
+"""
+Writes the probability of a given server type given a specific response code
+"""
 
 import csv, sys
 
