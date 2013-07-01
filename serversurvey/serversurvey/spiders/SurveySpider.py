@@ -26,28 +26,13 @@ class SurveySpider(BaseSpider):
         csv_file = open('top-1m.csv','r') 
         reader = csv.reader(csv_file)
         
-        urls = []
         rank=1
         while(rank < maxSites):
             domain = reader.next()[1]
             if (rank % selectionInterval) == 0 :
                 self.allowed_domains.append( domain )
-                host = 'www.' + domain
-                try:
-                    socket.gethostbyname(host)
-                    urls.append('http://' + host)
-                except socket.error:
-                    host = domain
-                    try:
-                        socket.gethostbyname(host)
-                        urls.append('http://' + host)
-                    except socket.error:
-                        pass
-            if (rank % 1000) == 0 :
-                print "Processed " + str(rank) + " hosts"
+                self.start_urls.append(domain)
             rank += 1
-        
-        self.start_urls += urls
         
         csv_file.close()
         print 'Done opening URLs, starting crawler....'
@@ -56,10 +41,24 @@ class SurveySpider(BaseSpider):
         """
         Prepares the requests for the spider
         """
+        #Convert the domain into a real URL
+        domain = url
+        host = 'www.' + domain
+        try:
+            socket.gethostbyname(host)
+            url = 'http://' + host
+        except socket.error:
+            host = domain
+            try:
+                socket.gethostbyname(host)
+                url = 'http://' + host
+            except socket.error:
+                return []
+
         requests = []
         
         self.requestCount = self.requestCount + 1
-        if (self.requestCount % 20) == 0 :
+        if (self.requestCount % 25) == 0 :
             print 'Creating requests for ' + url + ' (line ' + str(self.requestCount) + ')'
         
         #Create a get request
