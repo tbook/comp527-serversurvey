@@ -1,0 +1,27 @@
+# Define here the models for your scraped items
+#
+# See documentation in:
+# http://doc.scrapy.org/topics/items.html
+
+from scrapy.item import Item, Field
+
+class ServersurveyItem(Item):
+    # define the fields for your item here like:
+    version = Field()
+    contentType = Field()
+    date = Field()
+    requestUrl = Field()
+    responseUrl = Field()
+    
+    header = Field()
+    status = Field()
+    
+    requestMethod = Field()
+    requestHeaders = Field()
+    
+    contentLength = Field()
+    actualBodyLength = Field()
+
+    bodyMD5 = Field()
+    
+    requestType = Field()
