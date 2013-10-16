@@ -22,6 +22,7 @@ class SurveySpider(BaseSpider):
         print 'Opening Alexa URL CSV, please wait.'
         maxSites = 200000
         selectionInterval = 5   #Include every nth site
+        skipSites = 861010      #Skip the first n sites
         
         csv_file = open('top-1m.csv','r') 
         alexaReader = csv.reader(csv_file)
@@ -30,7 +31,7 @@ class SurveySpider(BaseSpider):
         queuedCount = 0
         for line in alexaReader :
             domain = line[1]
-            if (rank % selectionInterval) == 0 :
+            if (rank % selectionInterval) == 0 and rank > skipSites:
                 self.allowed_domains.append( domain )
                 self.start_urls.append(domain)
                 queuedCount = queuedCount + 1

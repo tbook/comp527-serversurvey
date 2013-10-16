@@ -7,6 +7,7 @@ import csv, sys
 
 MIN_RESPONSE_COUNT = 50  #The minimum number of times a response code must appear to be considered
 MIN_SERVER_COUNT = 50    #The minimum number of times a server type must appear to be considered
+INCLUDED_CODES = '/home/tbook/Documents/Rice/Server-Survey/results/important-200k.csv'
 
 def main(argv):
 
@@ -23,6 +24,12 @@ def main(argv):
     responseCount = {}  #Response, count
     responses = []  #List of lists
     totalCount = 0
+
+    #Read in permitted codes
+    permitted = set()
+    codeReader = csv.reader(file(INCLUDED_CODES, 'r'))
+    for line in codeReader :
+        permitted.add(line[0])
 
     headerRow = reader.next()
     for i,name in enumerate(headerRow):
@@ -68,7 +75,8 @@ def main(argv):
     allCodes = []
     for response in responseCount.keys() :
         if responseCount[response] > MIN_RESPONSE_COUNT :
-            allCodes.append(response)
+            if response in permitted :
+                allCodes.append(response)
 
     writer.writerow(["Server Type", "Server Version", "Request Type"] + allCodes)
 

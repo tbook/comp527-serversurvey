@@ -4,9 +4,9 @@ Writes the probability of a given server type given a specific response code
 
 import csv, sys
 
-MIN_RESPONSE_COUNT = 50  #The minimum number of times a response code must appear to be considered
-MIN_SERVER_COUNT = 50    #The minimum number of times a server type must appear to be considered
-PROBABILITY_THRESHOLD = 0.5 #Only report probabilities at least this certain
+MIN_RESPONSE_COUNT = 1000  #The minimum number of times a response code must appear to be considered
+MIN_SERVER_COUNT = 500    #The minimum number of times a server type must appear to be considered
+PROBABILITY_THRESHOLD = 0.0 #Only report probabilities at least this certain
 
 def main(argv):
 
@@ -19,10 +19,10 @@ def main(argv):
     headerIndices = {} #create a dict for easy lookup
     
     #Dictionaries to count responses
-    serverCount = {}
+    serverCount = {}            #Servertype, number of occurances
     serverResponseCount = {}    #Dict of dicts
-    responseCount = {}
-    totalCount = 0
+    responseCount = {}          #ResponseCode, number of occurances
+    totalCount = 0              #Total number of response codes (excluding ignored)
 
     headerRow = reader.next()
     for i,name in enumerate(headerRow):
@@ -68,14 +68,13 @@ def main(argv):
             responseCount[responseCode] = responseCount.get(responseCode, 0) + 1
 
         serverResponseCount[serverName] = thisServerResponseCount
-        
-        totalCount = totalCount + 1
-                
+                        
     #Decide which codes to include
     responseCodes = []
     for code in responseCount.keys():
         if (responseCount[code] >= MIN_RESPONSE_COUNT) :
             responseCodes.append(code)
+            totalCount = totalCount + responseCount[code]
 
     #Print a table of all results
     """

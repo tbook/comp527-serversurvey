@@ -3,6 +3,8 @@ Script to infer the correct type for a server based on a pre-compiled database o
 """
 
 import argparse
+import csv
+import urlparse
 
 #Location of fields within input file
 CODE = 0
@@ -21,57 +23,96 @@ if __name__ == "__main__":
     #Open the output
     outputFile = args.o[0]
     outputWriter = csv.writer(file(outputFile, "w"))
+    outputWriter.writerow(["Site", "Predeicted Server", "Probability"])
 
     #Read the training data
     probabilities = {}  # Server type, set of indicators
+    allCodes = set()    # All codes used
+    serverCounts = {}   # Count for each server type in training data
+    totalServerCount = 0 #Total count for all server types
 
     trainingFile = args.t[0]
-    trainingReader = csv.reader(file(trainingFile, "r"))
+    trainingReader = csv.reader(file(trainingFile, "r"), delimiter='\t')
     trainingHeader = trainingReader.next()
 
     for row in trainingReader :
         serverType = row[SERVER]
-        serverProbs = probabilities.get(serverType, set())
-        serverProbs.add(row)
+
+        serverProbs = probabilities.get(serverType, {})
+        serverProbs[row[CODE]] = float(row[PROB])
         probabilities[serverType] = serverProbs
 
+        allCodes.add(row[CODE])
+        serverCounts[serverType] = int(row[SERVER_COUNT])
+
+    for server in serverCounts.keys() :
+        totalServerCount += serverCounts[server]
+
+    print "Identified " + str(len(serverCounts)) + " server types.  " + str(totalServerCount) + " unique servers."
+
     #Read the input file
+    print "Reading site data..."
     siteData = {}   #Maps site name to set of responses
 
-    inputFile = args.t[0]
-    inputReader = csv.reader(file(inputFile, "r"))
-    inputHeader = trainingReader.next()
+    inputFile = file(args.i[0], "r")
+    inputReader = csv.reader(inputFile)
+    inputHeader = inputReader.next()
+    inputIndices = {}
+    for index, name in enumerate(inputHeader) :
+        inputIndices[name] = index 
 
     for row in inputReader :
-        site = row[0]
+        site = urlparse.urlparse(row[0]).hostname
         siteResponses = siteData.get(site,set())
-        siteResponses.add(row)
+        siteResponses.add(str(row[ inputIndices['requestType']]) + ':' + str(row[ inputIndices['status']]))
+        siteResponses.add(str(row[ inputIndices['requestType']]) + ':ActualBodyLength:' +str(row[ inputIndices['actualBodyLength']]))
+        siteResponses.add(str(row[ inputIndices['requestType']]) + ':BodyMD5:' +str(row[ inputIndices['bodyMD5']]))
+        headers = eval(row[ inputIndices['header']])
+        for header in headers.keys() :
+            if header != 'Server' :
+                for value in headers[header] :
+                    siteResponses.add(str(row[ inputIndices['requestType']]) + ':' + header + ":" + value)
         siteData[site] = siteResponses
 
     #Calculate the probabilities for each site
+    print "Calculating probabilities..."
+    noPredictionCount = 0
     for site in siteData.keys() :
         serverFinalProbs = {}   #Server type, probability
         for serverType in probabilities.keys() :
-            pProductServer = 1.0
-            pProductNotServer = 1.0
-            for code in serverType :
-                pResponseGivenServer = float(serverResponseCounts[server].get(response,0)) /\
-                serverCounts[server]
-                pProductServer = pProductServer * pResponseGivenServer
-                pResponseNotServer = float(responseCounts.get(response,0) - serverResponseCounts[server].get(response,0)) / (totalCount - serverCounts.get(server,0))
-                pProductNotServer = pProductNotServer * pResponseNotServer
-            pServer = float(serverCounts[server]) / totalCount
-            pNotServer = float(totalCount - serverCounts[server]) / totalCount
-            denominator = pServer * pProductServer + pNotServer * pProductNotServer
+            serverProbs = probabilities[serverType]
+            pServer = float(serverCounts[serverType]) / float(totalServerCount)
+            pNotServer = 1 - pServer
+
+            #print "serverCounts[serverType]: " + str(serverCounts[serverType])
+            #print "Initial pServer: " + str(pServer)
+
+            for code in siteData[site] :
+                if code in allCodes :
+                    #print code + " Prob: " + str(serverProbs[code])
+                    pServer *= serverProbs.get(code, 0.0)
+                    pNotServer *= 1.0 - serverProbs.get(code, 0.0)
+                    if pServer == 0.0 :
+                        #print "No value for " + code + " on " + serverType
+                        break
+
+            denominator = pServer + pNotServer
             if (denominator == 0):
-                print("Invalid data for server " + server + " on site " + site)
+                print("Invalid data for server " + serverType + " on site " + site)
             else:
-                pThisServer = pServer * pProductServer / denominator
-                serverFinalProbs[server] = pThisServer
+                pThisServer = pServer / denominator
+                serverFinalProbs[serverType] = pThisServer
+
         v = list(serverFinalProbs.values())
         k = list(serverFinalProbs.keys())
         mostLikely = k[v.index(max(v))]
-        outLine = [site, mostLikely, serverFinalProbs[mostLikely]]
-        outputWriter.writeRow(outLine)
+        if (serverFinalProbs[mostLikely] == 0.0) :
+            noPredictionCount += 1
+            #print "No prediction for " + site
+        else :
+            outLine = [site, mostLikely, serverFinalProbs[mostLikely]]
+            outputWriter.writerow(outLine)
+
+    print "No prediction for " + str(noPredictionCount) + " servers."
 
 
