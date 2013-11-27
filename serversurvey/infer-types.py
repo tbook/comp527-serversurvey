@@ -5,50 +5,43 @@ Script to infer the correct type for a server based on a pre-compiled database o
 import argparse
 import csv
 import urlparse
+import math
 
-#Location of fields within input file
-CODE = 0
-SERVER = 1
-PROB = 2
-SERVER_COUNT = 3
-CODE_COUNT = 4
+LAPLACE_CONSTANT = 1 #For Laplace smoothing
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Predict server types based on a training file")
-    parser.add_argument("-i", nargs=1, help="input file")
-    parser.add_argument("-t", nargs=1, help="training file")
-    parser.add_argument("-o", nargs=1, help="output file")
+    parser.add_argument("-i", nargs=1, help="input file", required=True)
+    parser.add_argument("-t", nargs=1, help="training file", required=True)
+    parser.add_argument("-o", nargs=1, help="output file", required=True)
     args = parser.parse_args()
 
-    #Open the output
+    #Open the output file
     outputFile = args.o[0]
     outputWriter = csv.writer(file(outputFile, "w"))
-    outputWriter.writerow(["Site", "Predeicted Server", "Probability"])
+    outputWriter.writerow(["Site", "Server Type", "Probability"])
 
     #Read the training data
-    probabilities = {}  # Server type, set of indicators
-    allCodes = set()    # All codes used
     serverCounts = {}   # Count for each server type in training data
-    totalServerCount = 0 #Total count for all server types
+    responseCounts = {}  # Count for a given response code across all server types
+    servers = {}    #Dict of {response, count}
+    totalServerCount = 0
 
     trainingFile = args.t[0]
     trainingReader = csv.reader(file(trainingFile, "r"), delimiter='\t')
     trainingHeader = trainingReader.next()
 
     for row in trainingReader :
-        serverType = row[SERVER]
+        serverType = row[0]
+        serverCounts[serverType] = int(row[1])
+        totalServerCount += int(row[1])
 
-        serverProbs = probabilities.get(serverType, {})
-        serverProbs[row[CODE]] = float(row[PROB])
-        probabilities[serverType] = serverProbs
-
-        allCodes.add(row[CODE])
-        serverCounts[serverType] = int(row[SERVER_COUNT])
-
-    for server in serverCounts.keys() :
-        totalServerCount += serverCounts[server]
-
-    print "Identified " + str(len(serverCounts)) + " server types.  " + str(totalServerCount) + " unique servers."
+        counts = {}
+        for index, code in enumerate(trainingHeader[2:]) :
+            index = index + 2
+            counts[code] = int(row[index])
+            responseCounts[code] = responseCounts.get(code, 0) + int(row[index])
+        servers[serverType] = counts
 
     #Read the input file
     print "Reading site data..."
@@ -78,41 +71,41 @@ if __name__ == "__main__":
     print "Calculating probabilities..."
     noPredictionCount = 0
     for site in siteData.keys() :
-        serverFinalProbs = {}   #Server type, probability
-        for serverType in probabilities.keys() :
-            serverProbs = probabilities[serverType]
+        siteResponses = siteData[site]
+
+        mostProbable = None
+        highestProbability = float('-inf')
+
+        for serverType in servers.keys() :
+
+            counts = servers[serverType] 
             pServer = float(serverCounts[serverType]) / float(totalServerCount)
-            pNotServer = 1 - pServer
+            logCodeServer = math.log(pServer, 2)
+            logNotCodeServer = math.log(1 - pServer, 2)
 
-            #print "serverCounts[serverType]: " + str(serverCounts[serverType])
-            #print "Initial pServer: " + str(pServer)
+            for code in counts.keys() :
+                pCodeServer = float(counts[code] + LAPLACE_CONSTANT) \
+                    / float(serverCounts[serverType] + LAPLACE_CONSTANT)
+                pNotCodeServer = float((serverCounts[serverType] - counts[code]) + LAPLACE_CONSTANT) \
+                    / float(serverCounts[serverType] + LAPLACE_CONSTANT)
 
-            for code in siteData[site] :
-                if code in allCodes :
-                    #print code + " Prob: " + str(serverProbs[code])
-                    pServer *= serverProbs.get(code, 0.0)
-                    pNotServer *= 1.0 - serverProbs.get(code, 0.0)
-                    if pServer == 0.0 :
-                        #print "No value for " + code + " on " + serverType
-                        break
+                if code in siteResponses :  #Add P(code | server)
+                    logCodeServer += math.log(pCodeServer, 2)
+                    logNotCodeServer += math.log(pNotCodeServer, 2)
+                else:   #Add P(!code | server)
+                    logCodeServer += math.log(pNotCodeServer, 2)
+                    logNotCodeServer += math.log(pCodeServer, 2)
 
-            denominator = pServer + pNotServer
-            if (denominator == 0):
-                print("Invalid data for server " + serverType + " on site " + site)
-            else:
-                pThisServer = pServer / denominator
-                serverFinalProbs[serverType] = pThisServer
+            #Calculate the probability for this server type
+            pThisServer = logCodeServer
 
-        v = list(serverFinalProbs.values())
-        k = list(serverFinalProbs.keys())
-        mostLikely = k[v.index(max(v))]
-        if (serverFinalProbs[mostLikely] == 0.0) :
-            noPredictionCount += 1
-            #print "No prediction for " + site
-        else :
-            outLine = [site, mostLikely, serverFinalProbs[mostLikely]]
-            outputWriter.writerow(outLine)
+            if pThisServer >= highestProbability :
+                mostProbable = serverType
+                highestProbability = pThisServer
 
-    print "No prediction for " + str(noPredictionCount) + " servers."
+        outLine = [site, mostProbable, highestProbability]
+        
+        outputWriter.writerow(outLine)
+
 
 

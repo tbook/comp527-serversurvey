@@ -1,12 +1,11 @@
 """
-Writes the probability of a given server type given a specific response code
+Counts the number of instances of a given server type for a given code
 """
 
 import csv, sys
 
 MIN_RESPONSE_COUNT = 1000  #The minimum number of times a response code must appear to be considered
 MIN_SERVER_COUNT = 500  #The minimum number of times a server type must appear to be considered
-PROBABILITY_THRESHOLD = 0.0 #Only report probabilities at least this certain
 
 def main(argv):
 
@@ -35,6 +34,8 @@ def main(argv):
 
         #Ignore empty names - no data here
         if (serverName == "") :
+            continue
+        if (serverName == "-") :
             continue
 
         #Use a version substring
@@ -76,32 +77,6 @@ def main(argv):
             responseCodes.append(code)
             totalCount = totalCount + responseCount[code]
 
-    #Print a table of all results
-    """
-    #Write the output headers
-    writer.writerow(['Server', 'Server Count'] + responseCodes)
-    outRow = ['Response Count', ' ']
-    for code in responseCodes :
-        outRow.append(responseCount[code])
-    writer.writerow(outRow)
-    
-    #Write the output for each server
-    for server in serverCount.keys():
-        thisServerResponseCount = serverResponseCount[server]
-        if (serverCount[server] >= MIN_SERVER_COUNT) :
-            outRow = []
-            outRow.append(server)
-            outRow.append(serverCount[server])
-            for code in responseCodes:
-                #Calculate probabilities
-                pCodeServer = float(thisServerResponseCount.get(code,0)) / float(serverCount[server])
-                pServer = float(serverCount[server]) / float(totalCount)
-                pCode = float(responseCount[code]) / float(totalCount)
-                pServerCode = pCodeServer * pServer / pCode
-                outRow.append(pServerCode)
-            writer.writerow(outRow);
-    """
-    
     #Remove data for ignored servers
     for server in serverCount.keys():
         thisServerResponseCount = serverResponseCount[server]
@@ -109,31 +84,27 @@ def main(argv):
             for code in responseCodes :
                 responseCount[code] -= thisServerResponseCount.get(code, 0)
                 totalCount -= thisServerResponseCount.get(code, 0)
+            del serverCount[server]
 
-    #Print the most significant results
-    probabilities = []  #List of lists
+    #Print a table of all results
 
+    #Write the output headers
+    writer.writerow(['Server', 'Server Count'] + responseCodes)
+    
+    #Write the output for each server
     for server in serverCount.keys():
         thisServerResponseCount = serverResponseCount[server]
-        if (serverCount[server] >= MIN_SERVER_COUNT) :
-            for code in responseCodes:
-                #Calculate probabilities
-                pCodeServer = float(thisServerResponseCount.get(code,0)) / float(serverCount[server])
-                pServer = float(serverCount[server]) / float(totalCount)
-                pCode = float(responseCount[code]) / float(totalCount)
-                pServerCode = pCodeServer * pServer / pCode
-                if (pServerCode > PROBABILITY_THRESHOLD) :
-                    probabilities.append( [code, server, pServerCode] )
-
-    writer.writerow(['Code','Server','Probability','Server Count','Code Count'])
-    for probability in probabilities :
-        writer.writerow( probability + [serverCount[probability[1]], responseCount[probability[0]]])
-            
-
+        outRow = []
+        outRow.append(server)
+        outRow.append(serverCount[server])
+        for code in responseCodes:
+            outRow.append(thisServerResponseCount.get(code,0))
+        writer.writerow(outRow);
+    
 if __name__ == "__main__":
     if len(sys.argv) < 3:
-        sys.stderr.write("\nCalculate the probability of a server type given a response code")
-        sys.stderr.write("\nSyntax: baysian-analysis.py [input file] [output file]\n\n")
+        sys.stderr.write("\nCounts the number of times a code appears for a given server type")
+        sys.stderr.write("\nSyntax: count.py [input file] [output file]\n\n")
         sys.exit(1)
 
     main(sys.argv[1:])
